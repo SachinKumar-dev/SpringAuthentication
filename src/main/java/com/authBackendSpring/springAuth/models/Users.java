@@ -1,4 +1,5 @@
 package com.authBackendSpring.springAuth.models;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -14,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class Users {
 
     @Id
-    private String Id;
+    private ObjectId _id;
 
     //go with other fields that may require
     @JsonInclude(JsonInclude.Include.NON_NULL) 
@@ -26,8 +27,6 @@ public class Users {
     @JsonInclude(JsonInclude.Include.NON_NULL) 
     private String otp;
 
-    // Only include in JSON if not null
-     @JsonInclude(JsonInclude.Include.NON_NULL) 
     private String refreshToken;
 
     // Only include in JSON if not null
@@ -54,14 +53,14 @@ public class Users {
         this.password = password;
     }
 
-    public String getId() {
-        return Id;
+     public String getId() {
+        return _id != null ? _id.toHexString() : null;
     }
 
     public void setId(String id) {
-        Id = id;
+        this._id = new ObjectId(id);
     }
-
+    
     public String getName() {
         return name;
     }
