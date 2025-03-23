@@ -1,5 +1,7 @@
 package com.authBackendSpring.springAuth.repository;
 import java.util.Optional;
+
+import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.Update;
@@ -15,6 +17,9 @@ public interface UserRepository extends MongoRepository<Users,String>{
 
     public Users deleteByEmail(String email);
 
+    @Query("{ '_id': ?0 }")
+    Optional<Users> findByObjectId(ObjectId id);
+    
     //custom query to find by email and update pass. only
     @Query("{'email':?0}")
     @Update("{'$set':{'password':?1}}")

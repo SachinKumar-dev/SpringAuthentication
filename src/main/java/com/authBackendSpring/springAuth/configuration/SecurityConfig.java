@@ -42,7 +42,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 // Allow /register and /login endpoints without authentication
                 .requestMatchers("/api/v1/users/register", "/api/v1/users/login", "/api/v1/users/send", "/api/v1/users/sendOtp",
-                "/api/v1/users/verifyOtp", "/api/v1/users/resendOtp","/api/v1/users/resendForgotPassOtp", "/api/v1/users/sendForgotPassOtp").permitAll()
+                "/api/v1/users/verifyOtp", "/api/v1/users/resendOtp","/api/v1/users/resendForgotPassOtp", 
+                "/api/v1/users/refreshToken",
+                "/api/v1/users/sendForgotPassOtp").permitAll()
                 // All other endpoints require authentication
                 .anyRequest().authenticated()
             )

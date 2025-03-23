@@ -57,11 +57,16 @@ public class JwtService {
                 .add(claims)
                 .subject(email) 
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 24*60 *60*1000L))
+                .expiration(new Date(System.currentTimeMillis() + 60 * 1000L))
                 .and()
                 .signWith(getKey())
                 .compact();
         }
+
+        public boolean validateRefreshToken(String refreshToken) {
+            return isTokenExpired(refreshToken);
+        }
+    
 
         private SecretKey getKey() {
             byte[] keyBytes=Decoders.BASE64.decode(privateKey);
@@ -94,8 +99,6 @@ public class JwtService {
     }
     return false;
 }
-
-
     public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }

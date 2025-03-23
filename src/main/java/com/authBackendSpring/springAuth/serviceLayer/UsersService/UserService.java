@@ -1,10 +1,16 @@
 package com.authBackendSpring.springAuth.serviceLayer.UsersService;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+
+import org.bson.types.ObjectId;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import com.authBackendSpring.springAuth.exceptionHandler.CustomException;
 import com.authBackendSpring.springAuth.models.Users;
 import com.authBackendSpring.springAuth.repository.UserRepository;
 
@@ -127,6 +133,22 @@ public class UserService implements UserDetailsService{
       return new com.authBackendSpring.springAuth.models.UserPrincipal(user);
     } catch (Exception e) {
       throw new RuntimeException(e.getMessage());
+    }
+  }
+
+  //for generating new access token
+  public List<String> getRefreshToken(String extractedId) {
+    List<String> credentials = new ArrayList<>();
+    ObjectId objectId=new ObjectId(extractedId);
+    Optional<Users> userOptional = userRepository.findByObjectId(objectId);
+    if (userOptional.isPresent()) {
+      Users user = userOptional.get();
+      System.out.println(user.getEmail());
+      credentials.add(user.getRefreshToken());
+      credentials.add(user.getEmail());
+      return credentials;
+    } else {
+      throw new CustomException(404, "User not found with given id: " + extractedId);
     }
   }
 }

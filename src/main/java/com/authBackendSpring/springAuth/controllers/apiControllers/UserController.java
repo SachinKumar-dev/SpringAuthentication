@@ -1,11 +1,14 @@
 package com.authBackendSpring.springAuth.controllers.apiControllers;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.authBackendSpring.springAuth.configuration.JwtFilter;
 import com.authBackendSpring.springAuth.exceptionHandler.CustomException;
 import com.authBackendSpring.springAuth.models.Otp;
@@ -13,7 +16,9 @@ import com.authBackendSpring.springAuth.models.Users;
 import com.authBackendSpring.springAuth.responseHandler.ResponseEntityHandler;
 import com.authBackendSpring.springAuth.responseHandler.ResponseHanlder;
 import com.authBackendSpring.springAuth.serviceLayer.EmailService.EmailService;
+import com.authBackendSpring.springAuth.serviceLayer.UsersService.JwtService;
 import com.authBackendSpring.springAuth.serviceLayer.UsersService.UserService;
+
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -22,12 +27,48 @@ public class UserController {
     
   @Autowired
   private EmailService emailService;
+
+  private JwtService jwtService;
   
-    private final UserService usersService;
+  private final UserService usersService;
 
 
-    public UserController (UserService service){
+    public UserController (UserService service,JwtService jwtService){
       this.usersService=service;
+      this.jwtService=jwtService;
+    }
+
+    //refresh the access token when expired
+    @PostMapping("/refreshToken")
+    public ResponseEntity<ResponseHanlder<Object>> refreshAccessToken(@RequestBody Users user) {
+        String refreshToken = user.getRefreshToken();
+        if (refreshToken == null) {
+          return ResponseEntityHandler.error(404,"Refresh token is missing.");
+        }
+        try {
+            String extractedId = jwtService.extractUserEmail(refreshToken);
+
+            System.out.println(extractedId);
+
+            //check if refresh token is expired force log out the user
+            if (jwtService.validateRefreshToken(refreshToken)) {
+              return ResponseEntityHandler.error(401,"Invalid or expired refresh token.");
+            }
+
+            //if not expired proceed further
+            //find the refreshToken and email from DB with extracted ID
+            List<String> credentials=usersService.getRefreshToken(extractedId);
+            String newAccessToken="";
+            //if got the credentials proceed further
+            if(credentials.get(0).equals(refreshToken)){
+            newAccessToken = jwtService.generateAccessToken(credentials.get(1));
+            }
+            Map<String,String> accessTokenMap=new HashMap<>();
+            accessTokenMap.put("accessToken", newAccessToken);
+            return ResponseEntityHandler.getResponse(200,accessTokenMap,"Access token refreshed successfully!!");
+          } catch (Exception e) {
+          throw new CustomException(500, e.getMessage());
+        }
     }
 
     //register the user
@@ -57,6 +98,8 @@ public class UserController {
     //login user
     @PostMapping("/login")
     public ResponseEntity<ResponseHanlder<Object>> loginUser(@RequestBody Users user) {
+      System.out.println(user.getEmail());
+      System.out.println(user.getPassword());
       if(user.getEmail()==null || user.getPassword()==null){
         return ResponseEntityHandler.error(404, "Email or password missing");
       }
@@ -217,3 +260,6 @@ public class UserController {
 
     
 }
+
+    
+
